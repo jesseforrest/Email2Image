@@ -48,17 +48,18 @@ $email2Image->setFontFile('tahoma.ttf');
 $email2Image->setFontSize(12);
 $email2Image->setWidth(400);
 $email2Image->setHeight(300);
-$email2Image->setBackgroundColor('000000');
-$email2Image->setForegroundColor('FFFFFF');
+$email2Image->setBackgroundColor('293134');
+$email2Image->setForegroundColor('668aaf');
 $email2Image->setEmail('example@example.com');
 $email2Image->outputImage();
 ```  
 
-Example - Securely Encode Email Address for Display on Website
----------------------
+Example - Securely Encode an Email Address for Display on a Website
+-------------------------------------------------------------------
 
 This example will show how to use Email2Image to securely encode an email 
-address and display it as an image on a website.
+address and display it as an image on a website. This will prevent scrapers
+from easily gathering email addresses from your website.
 
 First you will need to create a page that will display the email address as 
 an image.  In this example, we call this page *index.php* and it should be
@@ -105,7 +106,8 @@ key.  You can update the *$parameters* array with any data that you want to
 pass to *image.php*.  All the data passed to *image.php* will be encrypted.
 
 Next, you want to create an *image.php* file that will decrypt the information
-and output a PNG image.
+and output a PNG image. This file should be in the same directory as 
+*index.php* and *Email2Image.php*.
 
 The file *image.php* should have these contents:
  ```php
@@ -149,3 +151,14 @@ if (isset($_GET['encrypted_data'], $_GET['public_key']))
 // Output image
 $email2Image->outputImage();
 ```
+
+You will want to replace 'example-salt-string' with the same salt key you used
+in *index.php*.  
+
+You should note that this example utilizes 3 encoded parameters:
+ - email
+ - width
+ - height
+ 
+If you encoded more fields in *index.php*, then you could use those files in
+*image.php*.
