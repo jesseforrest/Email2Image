@@ -24,6 +24,7 @@ Example - Basic Usage
 This example will show how to select the font to be used and output an image.
 
 ```php
+<?php
 require_once 'Email2Image.php';
 $email2Image = new Email2Image();
 $email2Image->setFontPath('./fonts/');
@@ -40,6 +41,7 @@ background color, and foreground color.
  
 
 ```php
+<?php
 require_once 'Email2Image.php';
 $email2Image = new Email2Image();
 $email2Image->setFontPath('./fonts/');
