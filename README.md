@@ -34,12 +34,11 @@ $email2Image->outputImage();
 ``` 
 
 Example - Set Font and Image Preferences
----------------------
+----------------------------------------
 
 This example will show how to set the font, font size, image dimensions, 
 background color, and foreground color.
  
-
 ```php
 <?php
 require_once 'Email2Image.php';
@@ -54,3 +53,99 @@ $email2Image->setForegroundColor('FFFFFF');
 $email2Image->setEmail('example@example.com');
 $email2Image->outputImage();
 ```  
+
+Example - Securely Encode Email Address for Display on Website
+---------------------
+
+This example will show how to use Email2Image to securely encode an email 
+address and display it as an image on a website.
+
+First you will need to create a page that will display the email address as 
+an image.  In this example, we call this page *index.php* and it should be
+in the same directory as *Email2Image.php*.
+
+The file *index.php* should have these contents:
+ ```php
+<?php
+require_once 'Email2Image.php';
+
+// Instantiate object
+$email2Image = new Email2Image();
+
+// Set the salt to be used for additional security
+$email2Image->setSalt('example-salt-string');
+
+// The key/value pairs you want to encrypt and pass to image.php
+$parameters = array(
+   'email' => 'example@example.com',
+   'width' => '400',
+   'height' => '200'
+);
+
+// Gather the response from the encrypt method
+$response = $email2Image->encrypt($parameters);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Email2Image Example</title>
+</head>
+<body>
+   <img 
+      src="image.php?<?php echo http_build_query($response, '', '&amp;'); ?>"
+      width="<?php echo $parameters['width']; ?>"
+      height="<?php echo $parameters['height']; ?>"
+      alt=""/>
+</body>
+</html>
+```  
+
+You will want to replace 'example-salt-string' with a unique 32 character salt 
+key.  You can update the *$parameters* array with any data that you want to 
+pass to *image.php*.  All the data passed to *image.php* will be encrypted.
+
+Next, you want to create an *image.php* file that will decrypt the information
+and output a PNG image.
+
+The file *image.php* should have these contents:
+ ```php
+<?php
+require_once 'Email2Image.php';
+
+// The email address to be displayed
+$email = '';
+
+// Instantiate Email2Image
+$email2Image = new Email2Image();
+$email2Image->setSalt('example-salt-string');
+$email2Image->setFontPath('./fonts/');
+$email2Image->setFontFile('tahoma.ttf');
+$email2Image->setFontSize(12);
+$email2Image->setBackgroundColor('293134');
+$email2Image->setForegroundColor('668aaf');
+
+// Decrypt parameters passed via encryption
+if (isset($_GET['encrypted_data'], $_GET['public_key']))
+{
+   $encryptedData = $_GET['encrypted_data'];
+   $publicKey = $_GET['public_key'];
+   
+   $response = $email2Image->decrypt($encryptedData, $publicKey);
+   
+   if (isset($response['email']))
+   {
+      $email2Image->setEmail($response['email']);
+   }
+   if (isset($response['width']))
+   {
+      $email2Image->setWidth($response['width']);
+   }
+   if (isset($response['height']))
+   {
+      $email2Image->setHeight($response['height']);
+   }
+}
+
+// Output image
+$email2Image->outputImage();
+```
