@@ -160,5 +160,5 @@ You should note that this example utilizes 3 encoded parameters:
  - width
  - height
  
-If you encoded more fields in *index.php*, then you could use those files in
+If you encoded more fields in *index.php*, then you could use those fields in
 *image.php*.
