@@ -15,13 +15,32 @@
 
 require_once '../Email2Image.php';
 
+// Instantiate object
 $email2Image = new Email2Image();
-$email2Image->setFontPath('./fonts/');
-$email2Image->setFontFile('tahoma.ttf');
-$email2Image->setFontSize(12);
-$email2Image->setWidth(400);
-$email2Image->setHeight(300);
-$email2Image->setBackgroundColor('000000');
-$email2Image->setForegroundColor('FFFFFF');
-$email2Image->setEmail('example@example.com');
-$email2Image->outputImage();
+
+// Set the salt to be used for additional security
+$email2Image->setSalt('example-salt-string');
+
+// The key/value pairs you want to encrypt and pass to image.php
+$parameters = array(
+   'email' => 'example@example.com',
+   'width' => '400',
+   'height' => '200'
+);
+
+// Gather the response from the encrypt method
+$response = $email2Image->encrypt($parameters);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Email2Image Example</title>
+</head>
+<body>
+   <img 
+      src="image.php?<?php echo http_build_query($response, '', '&amp;'); ?>"
+      width="<?php echo $parameters['width']; ?>"
+      height="<?php echo $parameters['height']; ?>"
+      alt=""/>
+</body>
+</html>

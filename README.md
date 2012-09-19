@@ -8,8 +8,8 @@ Overview
 --------
 
 The only file that needs to be included in order to utilize Email2Image is the
-Email2Image.php file.  We include an *example* directory to show common use
-cases.
+Email2Image.php file.  We additionally include an *example* directory to show 
+common use cases.
 
 Requirements
 ------------

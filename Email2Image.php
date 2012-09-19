@@ -90,6 +90,14 @@ class Email2Image
    protected $email = null;
    
    /**
+    * Holds an optional salt to additionally add security for encryption and
+    * decryption
+    * 
+    * @var string
+    */
+   protected $salt = '';
+   
+   /**
     * Sets the path to where the font is located
     * 
     * @param string $fontPath The path to the font.  You must include the 
@@ -196,42 +204,44 @@ class Email2Image
    }
    
    /**
-    * Returns a random alphanumeric string to be used as the key
+    * Sets the salt to be used for extra security for encryption and 
+    * decryption
     *
-    * @param integer $length The length of the key to create.
+    * @param string $salt The salt string to be used
     *
-    * @return string
+    * @return void
     */
-   public function getKey($length = 8)
+   public function setSalt($salt)
    {
-      $chars = 'abcdefghjkmnpqrstuvwxyz0123456789';
-      $i = 0;
-      $key = '';
-      while ($i < $length)
-      {
-         $num = mt_rand() % 33;
-         $tmp = substr($chars, $num, 1);
-         $key = $key . $tmp;
-         $i++;
-      }
-      return $key;
+      $this->salt = $salt;
    }
    
    /**
-    * Encrypt an email address with the passed in key
+    * Encrypts an associative array and returns a response array with the 
+    * encrypted information 
     *
-    * @param string $email The email address to encrypt
-    * @param string $key   The key used to encrypt the string
+    * @param array $parameters The associative array you want encrypted.
     *
-    * @return string Returns an encrypted string
+    * @return array Returns an array in the following format:
+    * <code>
+    * return array(
+    *    // The encrypted data
+    *    'encrypted_data' => '...',
+    *    // The public key used to decrypt the data
+    *    'public_key' => '...'
+    * );
+    * </code>
     */
-   public function getEncryptedEmail($email, $key)
+   public function encrypt($parameters)
    {
+      $publicKey = $this->getPublicKey();
+      $string = http_build_query($parameters);
+      
       // For sake of MCRYPT_RAND
       srand((double) microtime() * 1000000);
    
       // To improve variance
-      $key = md5($key);
+      $key = md5($publicKey . $this->salt);
    
       // Open module, and create IV
       $descriptor = mcrypt_module_open('des', '', 'cfb', '');
@@ -243,47 +253,64 @@ class Email2Image
       if (mcrypt_generic_init($descriptor, $key, $iv) != -1)
       {
          // Encrypt data
-         $cT = mcrypt_generic($descriptor, $email);
+         $cT = mcrypt_generic($descriptor, $string);
          mcrypt_generic_deinit($descriptor);
          mcrypt_module_close($descriptor);
          $cT = $iv . $cT;
    
-         return urlencode(base64_encode($cT));
+         return array(
+            'encrypted_data' => urlencode(base64_encode($cT)),
+            'public_key' => $publicKey
+         );
       }
    }
-   
+
    /**
     * This function will take an encrypted email and key and decrypt it to the
     * original email.
     *
-    * @param string $encryptedEmail The encoded email address
-    * @param string $key            The key to decode the string
+    * @param string $encryptedData The key/value parameters after being passed
+    *                              To the <code>encrypt</code> function.  
+    * @param string $publicKey     The public key used to decode the string
     *
-    * @return string Returns the string decrypted
+    * @return array Returns the decoded string as a PHP associative array
     */
-   public function getDecryptedEmail($encryptedEmail, $key)
+   public function decrypt($encryptedData, $publicKey)
    {
-      $encryptedEmail = base64_decode($encryptedEmail);
-   
+      $encryptedData = base64_decode(urldecode($encryptedData));
+      
       // To improve variance
-      $key = md5($key);
-   
+      $key = md5($publicKey . $this->salt);
+      
       // Open module, and create IV
       $descriptor = mcrypt_module_open('des', '', 'cfb', '');
       $key = substr($key, 0, mcrypt_enc_get_key_size($descriptor));
       $ivSize = mcrypt_enc_get_iv_size($descriptor);
-      $iv = substr($encryptedEmail, 0, $ivSize);
-      $encryptedEmail = substr($encryptedEmail, $ivSize);
-   
+      $iv = substr($encryptedData, 0, $ivSize);
+      $encryptedData = substr($encryptedData, $ivSize);
+      
       // Initialize encryption handle
       if (mcrypt_generic_init($descriptor, $key, $iv) != -1)
       {
+         
          // Decrypt data
-         $decryptedEmail = mdecrypt_generic($descriptor, $encryptedEmail);
+         $decryptedData = mdecrypt_generic($descriptor, $encryptedData);
          mcrypt_generic_deinit($descriptor);
          mcrypt_module_close($descriptor);
+  
+         // Convert decoded data into associative array
+         $parameters = explode('&', $decryptedData);
+         $response = array();
+         foreach ($parameters as $keyAndValue)
+         {
+            $keyValueParts = explode('=', $keyAndValue);
+            if (count($keyValueParts) == 2)
+            {
+               $response[$keyValueParts[0]] = urldecode($keyValueParts[1]);
+            }
+         }
    
-         return $decryptedEmail;
+         return $response;
       }
    }
    
@@ -326,8 +353,10 @@ class Email2Image
          $r = hexdec('0x' . substr($this->backgroundColor, 0, 2));
          $g = hexdec('0x' . substr($this->backgroundColor, 2, 2));
          $b = hexdec('0x' . substr($this->backgroundColor, 4, 2));
+         
+         // The first call to imagecolorallocate() fills the background color 
+         // in palette-based images
          $backgroundColor = imagecolorallocate($image, $r, $g, $b);
-         //@todo create background
       }
       
       // Set foreground color 
@@ -355,5 +384,27 @@ class Email2Image
       
       // Destroy the image
       imagedestroy($image);
+   }
+   
+   /**
+    * Returns a random alphanumeric string to be used as the key
+    *
+    * @param integer $length The length of the key to create.
+    *
+    * @return string
+    */
+   protected function getPublicKey($length = 8)
+   {
+      $chars = 'abcdefghjkmnpqrstuvwxyz0123456789';
+      $i = 0;
+      $key = '';
+      while ($i < $length)
+      {
+         $num = mt_rand() % 33;
+         $tmp = substr($chars, $num, 1);
+         $key = $key . $tmp;
+         $i++;
+      }
+      return $key;
    }
 }
