@@ -33,6 +33,41 @@
 class Email2Image
 {
    /**
+    * Used to align top
+    * 
+    * @var integer
+    */
+   const TOP = 0;
+   
+   /**
+    * Used to align left
+    *
+    * @var integer
+    */
+   const LEFT = 1;
+   
+   /**
+    * Used to align right
+    *
+    * @var integer
+    */
+   const RIGHT = 2;
+   
+   /**
+    * Used to align bottom
+    *
+    * @var integer
+    */
+   const BOTTOM = 3;
+   
+   /**
+    * Used to align middle
+    *
+    * @var integer
+    */
+   const MIDDLE = 4;
+   
+   /**
     * The path to the font
     * 
     * @var string
@@ -96,6 +131,27 @@ class Email2Image
     * @var string
     */
    protected $salt = '';
+   
+   /**
+    * How to align the email address vertically in the image.  Valid values are:
+    *  - Email2Image::TOP
+    *  - Email2Image::MIDDLE
+    *  - Email2Image::BOTTOM
+    *  
+    * @var integer
+    */
+   protected $verticalAlignment = self::MIDDLE;
+
+   /**
+    * How to align the email address horizontally in the image.  Valid values 
+    * are:
+    *  - Email2Image::LEFT
+    *  - Email2Image::MIDDLE
+    *  - Email2Image::RIGHT
+    *
+    * @var integer
+    */
+   protected $horizontalAlignment = self::LEFT;
    
    /**
     * Sets the path to where the font is located
@@ -214,6 +270,40 @@ class Email2Image
    public function setSalt($salt)
    {
       $this->salt = $salt;
+   }
+   
+   /**
+    * Set the horizontal alignment for where the email address should 
+    * appear in the image.  
+    * 
+    * @param integer $verticalAlignment Set the vertical alignment with 
+    * one of these values:
+    *  - Email2Image::TOP
+    *  - Email2Image::MIDDLE
+    *  - Email2Image::BOTTOM
+    *
+    * @return void
+    */
+   public function setVerticalAlignment($verticalAlignment)
+   {
+      $this->verticalAlignment = $verticalAlignment;
+   }
+   
+   /**
+    * Set the horizontal alignment for where the email address should 
+    * appear in the image.  
+    * 
+    * @param integer $horizontalAlignment Set the horizontal alignment with 
+    * one of these values:
+    *  - Email2Image::LEFT
+    *  - Email2Image::MIDDLE
+    *  - Email2Image::RIGHT
+    *
+    * @return void
+    */
+   public function setHorizontalAlignment($horizontalAlignment)
+   {
+      $this->horizontalAlignment = $horizontalAlignment;
    }
    
    /**
@@ -359,6 +449,44 @@ class Email2Image
          $backgroundColor = imagecolorallocate($image, $r, $g, $b);
       }
       
+      // Determine horizontal position for text
+      $x = null;
+      // If align left
+      if ($this->horizontalAlignment == self::LEFT)
+      {
+         $x = 0;
+      }
+      // If align middle
+      else if ($this->horizontalAlignment == self::MIDDLE)
+      {
+         $textWidth = abs($bbox[4] - $bbox[0]);
+         $x = intval(($width - $textWidth) / 2);
+      }
+      // If align right
+      else
+      {
+         $textWidth = abs($bbox[4] - $bbox[0]);
+         $x = intval($width - $textWidth);
+      }
+      
+      // Determine vertical position for text 
+      $y = null;
+      // If align top
+      if ($this->verticalAlignment == self::TOP)
+      {
+         $y = $this->fontSize;
+      }
+      // If align middle
+      else if ($this->verticalAlignment == self::MIDDLE)
+      {
+         $y = intval($height - (($height - $this->fontSize) / 2));
+      }
+      // If align bottom
+      else
+      {
+         $y = $height;
+      }
+      
       // Set foreground color 
       if ($this->foregroundColor != null)
       {
@@ -372,8 +500,8 @@ class Email2Image
             $image,
             $this->fontSize,
             0,
-            0,
-            $height,
+            $x,
+            $y,
             $foregroundColor,
             $this->fontPath . $this->fontFile,
             $this->email);

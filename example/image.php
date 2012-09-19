@@ -26,6 +26,8 @@ $email2Image->setFontFile('tahoma.ttf');
 $email2Image->setFontSize(12);
 $email2Image->setBackgroundColor('293134');
 $email2Image->setForegroundColor('668aaf');
+$email2Image->setHorizontalAlignment(Email2Image::LEFT);
+$email2Image->setVerticalAlignment(Email2Image::MIDDLE);
 
 // Decrypt parameters passed via encryption
 if (isset($_GET['encrypted_data'], $_GET['public_key']))
