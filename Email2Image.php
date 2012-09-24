@@ -437,10 +437,10 @@ class Email2Image
       // Create image resource
       $image = imagecreate($width, $height);
       
-      // Exit if could not create image resource
+      // Return if could not create image resource
       if ($image === false)
       {
-         exit;
+         return;
       }
       
       // Set background color if necessary
