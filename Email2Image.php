@@ -434,6 +434,12 @@ class Email2Image
          $height = abs($bbox[1] - $bbox[5]);
       } 
       
+      // Return if could not determine width or height
+      if ((!$width) || (!$height))
+      {
+         return;
+      }
+      
       // Create image resource
       $image = imagecreate($width, $height);
       
