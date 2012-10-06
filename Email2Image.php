@@ -413,11 +413,14 @@ class Email2Image
    {
       header('Content-type: image/png');
       
+      // Calculate the real path
+      $realPath = realpath($this->fontPath . $this->fontFile);
+      
       // Get bounding box array
       $bbox = imageftbbox(
          $this->fontSize, 
          0, 
-         $this->fontPath . $this->fontFile, 
+         $realPath, 
          $this->email);
       
       // Determine width of image
@@ -515,7 +518,7 @@ class Email2Image
             $x,
             $y,
             $foregroundColor,
-            $this->fontPath . $this->fontFile,
+            $realPath,
             $this->email);
       }
       
