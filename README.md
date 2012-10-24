@@ -136,17 +136,24 @@ if (isset($_GET['encrypted_data'], $_GET['public_key']))
    
    $response = $email2Image->decrypt($encryptedData, $publicKey);
    
-   if (isset($response['email']))
+   if ($response == null)
    {
-      $email2Image->setEmail($response['email']);
+      $email2Image->setEmail('Unknown Email');
    }
-   if (isset($response['width']))
+   else
    {
-      $email2Image->setWidth($response['width']);
-   }
-   if (isset($response['height']))
-   {
-      $email2Image->setHeight($response['height']);
+      if (isset($response['email']))
+      {
+         $email2Image->setEmail($response['email']);
+      }
+      if (isset($response['width']))
+      {
+         $email2Image->setWidth($response['width']);
+      }
+      if (isset($response['height']))
+      {
+         $email2Image->setHeight($response['height']);
+      }
    }
 }
 
