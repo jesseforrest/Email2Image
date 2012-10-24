@@ -363,7 +363,8 @@ class Email2Image
     *                              To the <code>encrypt</code> function.  
     * @param string $publicKey     The public key used to decode the string
     *
-    * @return array Returns the decoded string as a PHP associative array
+    * @return array|null Returns the decoded string as a PHP associative array
+    * on success or null on failure.
     */
    public function decrypt($encryptedData, $publicKey)
    {
@@ -377,31 +378,42 @@ class Email2Image
       $key = substr($key, 0, mcrypt_enc_get_key_size($descriptor));
       $ivSize = mcrypt_enc_get_iv_size($descriptor);
       $iv = substr($encryptedData, 0, $ivSize);
+      
+      // If encrypted data is not not the necessary length
+      if (strlen($iv) != $ivSize)
+      {
+         return null;
+      }
+      
       $encryptedData = substr($encryptedData, $ivSize);
       
       // Initialize encryption handle
-      if (mcrypt_generic_init($descriptor, $key, $iv) != -1)
+      $init = mcrypt_generic_init($descriptor, $key, $iv);
+      
+      // If failed to initialize the buffers used for encryption
+      if (($init < 0) || ($init === false))
       {
-         
-         // Decrypt data
-         $decryptedData = mdecrypt_generic($descriptor, $encryptedData);
-         mcrypt_generic_deinit($descriptor);
-         mcrypt_module_close($descriptor);
-  
-         // Convert decoded data into associative array
-         $parameters = explode('&', $decryptedData);
-         $response = array();
-         foreach ($parameters as $keyAndValue)
-         {
-            $keyValueParts = explode('=', $keyAndValue);
-            if (count($keyValueParts) == 2)
-            {
-               $response[$keyValueParts[0]] = urldecode($keyValueParts[1]);
-            }
-         }
-   
-         return $response;
+         return null;
       }
+
+      // Decrypt data
+      $decryptedData = mdecrypt_generic($descriptor, $encryptedData);
+      mcrypt_generic_deinit($descriptor);
+      mcrypt_module_close($descriptor);
+
+      // Convert decoded data into associative array
+      $parameters = explode('&', $decryptedData);
+      $response = array();
+      foreach ($parameters as $keyAndValue)
+      {
+         $keyValueParts = explode('=', $keyAndValue);
+         if (count($keyValueParts) == 2)
+         {
+            $response[$keyValueParts[0]] = urldecode($keyValueParts[1]);
+         }
+      }
+
+      return $response;
    }
    
    /**
