@@ -441,6 +441,7 @@ class Email2Image
       {
          $width = abs($bbox[4] - $bbox[0]);
       }
+      $width = (int) $width;
       
       // Determine height of image
       $height = $this->height;
@@ -448,6 +449,7 @@ class Email2Image
       {
          $height = abs($bbox[1] - $bbox[5]);
       } 
+      $height = (int) $height;
       
       // Return if could not determine width or height
       if ((!$width) || (!$height))
